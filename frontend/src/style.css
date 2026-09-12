@@ -1,0 +1,329 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* Android Material 3 Palette */
+  --md-sys-color-primary: #00629E;
+  --md-sys-color-on-primary: #FFFFFF;
+  --md-sys-color-primary-container: #CFE5FF;
+  --md-sys-color-on-primary-container: #001D34;
+  
+  --md-sys-color-secondary: #526070;
+  --md-sys-color-on-secondary: #FFFFFF;
+  --md-sys-color-secondary-container: #D5E4F7;
+  --md-sys-color-on-secondary-container: #0E1D2A;
+  
+  --md-sys-color-tertiary: #67587A;
+  --md-sys-color-on-tertiary: #FFFFFF;
+  --md-sys-color-tertiary-container: #EEDCFF;
+  --md-sys-color-on-tertiary-container: #221533;
+  
+  --md-sys-color-error: #BA1A1A;
+  --md-sys-color-error-container: #FFDAD6;
+  --md-sys-color-on-error: #FFFFFF;
+  
+  --md-sys-color-success: #1E8E3E;
+  --md-sys-color-success-container: #C8F0D3;
+  --md-sys-color-on-success: #0C5120;
+
+  --md-sys-color-warning: #B06000;
+  --md-sys-color-warning-container: #FFE1B9;
+  --md-sys-color-on-warning: #432100;
+  
+  --md-sys-color-background: #F8FAFC;
+  --md-sys-color-on-background: #191C1E;
+  --md-sys-color-surface: #FFFFFF;
+  --md-sys-color-on-surface: #191C1E;
+  --md-sys-color-surface-variant: #DEE3EB;
+  --md-sys-color-on-surface-variant: #42474E;
+  --md-sys-color-outline: #72777F;
+  --md-sys-color-outline-variant: #C2C7CF;
+
+  --md-sys-elevation-1: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --md-sys-elevation-2: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.04);
+  --md-sys-elevation-3: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+  --md-sys-elevation-4: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.04);
+
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--md-sys-color-background);
+  color: var(--md-sys-color-on-background);
+  line-height: 1.5;
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--md-sys-color-outline-variant);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--md-sys-color-outline);
+}
+
+/* Layout Utilities */
+.app-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding-bottom: 72px; /* Space for mobile nav */
+}
+
+@media (min-width: 768px) {
+  .main-content {
+    padding-bottom: 24px;
+  }
+}
+
+/* Card Component */
+.m3-card {
+  background: var(--md-sys-color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--md-sys-elevation-1);
+  border: 1px solid var(--md-sys-color-surface-variant);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+  overflow: hidden;
+}
+.m3-card.interactive:hover {
+  box-shadow: var(--md-sys-elevation-2);
+  transform: translateY(-2px);
+  border-color: var(--md-sys-color-primary-container);
+}
+
+/* Button Components */
+.m3-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--radius-full);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.m3-btn:active {
+  transform: scale(0.97);
+}
+
+.m3-btn-primary {
+  background-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  box-shadow: var(--md-sys-elevation-1);
+}
+.m3-btn-primary:hover {
+  box-shadow: var(--md-sys-elevation-2);
+  filter: brightness(1.08);
+}
+
+.m3-btn-tonal {
+  background-color: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+}
+.m3-btn-tonal:hover {
+  filter: brightness(0.95);
+}
+
+.m3-btn-outlined {
+  background: transparent;
+  color: var(--md-sys-color-primary);
+  border: 1px solid var(--md-sys-color-outline);
+}
+.m3-btn-outlined:hover {
+  background-color: rgba(0, 98, 158, 0.06);
+  border-color: var(--md-sys-color-primary);
+}
+
+.m3-btn-danger {
+  background-color: var(--md-sys-color-error);
+  color: var(--md-sys-color-on-error);
+}
+.m3-btn-danger:hover {
+  filter: brightness(1.1);
+}
+
+.m3-btn-sm {
+  padding: 6px 14px;
+  font-size: 13px;
+  gap: 6px;
+}
+
+.m3-btn-icon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--md-sys-color-on-surface-variant);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.m3-btn-icon:hover {
+  background: rgba(0,0,0,0.06);
+  color: var(--md-sys-color-on-surface);
+}
+
+/* Floating Action Button (FAB) */
+.m3-fab {
+  position: fixed;
+  bottom: 84px;
+  right: 20px;
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  font-weight: 700;
+  font-size: 15px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: var(--md-sys-elevation-3);
+  cursor: pointer;
+  z-index: 40;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.m3-fab:hover {
+  box-shadow: var(--md-sys-elevation-4);
+  transform: translateY(-3px) scale(1.02);
+}
+@media (min-width: 768px) {
+  .m3-fab {
+    bottom: 30px;
+    right: 32px;
+  }
+}
+
+/* Forms & Inputs */
+.m3-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.m3-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface-variant);
+}
+.m3-input, .m3-select, .m3-textarea {
+  width: 100%;
+  padding: 12px 16px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--md-sys-color-on-surface);
+  background-color: #FFFFFF;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--radius-md);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.m3-input:focus, .m3-select:focus, .m3-textarea:focus {
+  border-color: var(--md-sys-color-primary);
+  box-shadow: 0 0 0 3px rgba(0, 98, 158, 0.15);
+}
+.m3-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Badges & Chips */
+.m3-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+}
+.m3-chip-primary {
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+}
+.m3-chip-success {
+  background: var(--md-sys-color-success-container);
+  color: var(--md-sys-color-on-success);
+}
+.m3-chip-warning {
+  background: var(--md-sys-color-warning-container);
+  color: var(--md-sys-color-on-warning);
+}
+.m3-chip-error {
+  background: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-error);
+}
+
+/* Modal and Bottom Sheet */
+.m3-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 16px;
+  animation: fadeIn 0.2s ease;
+}
+.m3-modal-card {
+  background: var(--md-sys-color-surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--md-sys-elevation-4);
+  width: 100%;
+  max-width: 580px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}

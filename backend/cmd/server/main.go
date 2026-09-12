@@ -1,0 +1,137 @@
+package main
+
+import (
+	"log"
+	"net/http"
+	"os"
+
+	"github.com/gin-gonic/gin"
+	"github.com/inventory/backend/internal/database"
+	"github.com/inventory/backend/internal/handlers"
+	"github.com/inventory/backend/internal/middleware"
+	"github.com/joho/godotenv"
+)
+
+// CORSMiddleware handles cross-origin requests
+func CORSMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, Authorization, accept, origin, Cache-Control, X-Requested-With")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE, PATCH, HEAD")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(http.StatusNoContent)
+			return
+		}
+
+		c.Next()
+	}
+}
+
+func main() {
+	// Load .env if present
+	_ = godotenv.Load()
+
+	// Connect to database
+	db, err := database.Connect()
+	if err != nil {
+		log.Fatalf("Database initialization failed: %v", err)
+	}
+
+	// Auto migrate schema
+	if err := database.AutoMigrate(db); err != nil {
+		log.Fatalf("Database migration failed: %v", err)
+	}
+
+	// Seed default admin, seller, settings and sample data
+	if err := database.SeedDefaultData(db); err != nil {
+		log.Printf("Warning: Failed to seed data: %v", err)
+	}
+
+	router := gin.Default()
+
+	// CORS configuration
+	router.Use(CORSMiddleware())
+
+	// Health Check
+	router.GET("/api/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "healthy",
+			"service": "spare-parts-inventory-api",
+		})
+	})
+
+	// Public Routes
+	api := router.Group("/api")
+	{
+		api.POST("/auth/login", handlers.Login)
+
+		// Direct PDF download without header (supports token in query if needed, or open)
+		api.GET("/bills/:id/pdf", handlers.GetBillPDF)
+		api.GET("/racks/:id/label-pdf", handlers.GetRackLabelPDF)
+	}
+
+	// Protected Routes (Authenticated Admin & Seller)
+	auth := api.Group("")
+	auth.Use(middleware.RequireAuth())
+	{
+		// Profile
+		auth.GET("/auth/me", handlers.GetProfile)
+		auth.PUT("/auth/password", handlers.UpdatePassword)
+
+		// Dashboard Statistics
+		auth.GET("/dashboard/stats", handlers.GetDashboardStats)
+
+		// Spare Parts
+		auth.GET("/parts", handlers.ListParts)
+		auth.GET("/parts/:id", handlers.GetPart)
+		auth.POST("/parts", handlers.CreatePart)
+		auth.PUT("/parts/:id", handlers.UpdatePart)
+		auth.POST("/parts/:id/adjust", handlers.AdjustStock)
+		auth.DELETE("/parts/:id", handlers.DeletePart)
+
+		// Racks
+		auth.GET("/racks", handlers.ListRacks)
+		auth.GET("/racks/:id", handlers.GetRack)
+		auth.POST("/racks", handlers.CreateRack)
+		auth.PUT("/racks/:id", handlers.UpdateRack)
+		auth.DELETE("/racks/:id", handlers.DeleteRack)
+
+		// Customers
+		auth.GET("/customers", handlers.ListCustomers)
+		auth.GET("/customers/search", handlers.SearchCustomers)
+		auth.GET("/customers/:id", handlers.GetCustomer)
+		auth.POST("/customers", handlers.CreateCustomer)
+		auth.PUT("/customers/:id", handlers.UpdateCustomer)
+
+		// Bills / Point-of-Sale
+		auth.GET("/bills", handlers.ListBills)
+		auth.GET("/bills/:id", handlers.GetBill)
+		auth.POST("/bills", handlers.CreateBill)
+
+		// System Settings (Read-only for Seller, Admin can write)
+		auth.GET("/settings", handlers.GetSettings)
+
+		// Admin-Only Routes
+		admin := auth.Group("")
+		admin.Use(middleware.RequireAdmin())
+		{
+			admin.PUT("/settings", handlers.UpdateSettings)
+			admin.GET("/users", handlers.ListUsers)
+			admin.POST("/users", handlers.CreateUser)
+			admin.PUT("/users/:id", handlers.UpdateUser)
+			admin.DELETE("/users/:id", handlers.DeleteUser)
+		}
+	}
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8081"
+	}
+
+	log.Printf("Server listening on :%s", port)
+	if err := router.Run(":" + port); err != nil {
+		log.Fatalf("Failed to run server: %v", err)
+	}
+}
