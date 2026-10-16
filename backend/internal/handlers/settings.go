@@ -60,3 +60,11 @@ func UpdateSettings(c *gin.Context) {
 
 	c.JSON(http.StatusOK, setting)
 }
+
+func ResetMockData(c *gin.Context) {
+	if err := database.ResetAndSeedMockData(database.DB); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to reset and seed database: " + err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Database cleared and fresh mock dataset successfully seeded!"})
+}

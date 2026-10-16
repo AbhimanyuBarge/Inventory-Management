@@ -69,6 +69,7 @@ func main() {
 
 		// Direct PDF download without header (supports token in query if needed, or open)
 		api.GET("/bills/:id/pdf", handlers.GetBillPDF)
+		api.GET("/returns/:id/pdf", handlers.GetReturnPDF)
 		api.GET("/racks/:id/label-pdf", handlers.GetRackLabelPDF)
 	}
 
@@ -83,13 +84,21 @@ func main() {
 		// Dashboard Statistics
 		auth.GET("/dashboard/stats", handlers.GetDashboardStats)
 
-		// Spare Parts
-		auth.GET("/parts", handlers.ListParts)
-		auth.GET("/parts/:id", handlers.GetPart)
-		auth.POST("/parts", handlers.CreatePart)
-		auth.PUT("/parts/:id", handlers.UpdatePart)
+		// Inventory Items
+		auth.GET("/items", handlers.ListItems)
+		auth.GET("/items/:id", handlers.GetItem)
+		auth.POST("/items", handlers.CreateItem)
+		auth.PUT("/items/:id", handlers.UpdateItem)
+		auth.POST("/items/:id/adjust", handlers.AdjustStock)
+		auth.DELETE("/items/:id", handlers.DeleteItem)
+
+		// Legacy Parts aliases
+		auth.GET("/parts", handlers.ListItems)
+		auth.GET("/parts/:id", handlers.GetItem)
+		auth.POST("/parts", handlers.CreateItem)
+		auth.PUT("/parts/:id", handlers.UpdateItem)
 		auth.POST("/parts/:id/adjust", handlers.AdjustStock)
-		auth.DELETE("/parts/:id", handlers.DeletePart)
+		auth.DELETE("/parts/:id", handlers.DeleteItem)
 
 		// Racks
 		auth.GET("/racks", handlers.ListRacks)
@@ -97,6 +106,14 @@ func main() {
 		auth.POST("/racks", handlers.CreateRack)
 		auth.PUT("/racks/:id", handlers.UpdateRack)
 		auth.DELETE("/racks/:id", handlers.DeleteRack)
+
+		// Vendors
+		auth.GET("/vendors", handlers.ListVendors)
+		auth.GET("/vendors/search", handlers.SearchVendors)
+		auth.GET("/vendors/:id", handlers.GetVendor)
+		auth.POST("/vendors", handlers.CreateVendor)
+		auth.PUT("/vendors/:id", handlers.UpdateVendor)
+		auth.DELETE("/vendors/:id", handlers.DeleteVendor)
 
 		// Customers
 		auth.GET("/customers", handlers.ListCustomers)
@@ -108,7 +125,13 @@ func main() {
 		// Bills / Point-of-Sale
 		auth.GET("/bills", handlers.ListBills)
 		auth.GET("/bills/:id", handlers.GetBill)
+		auth.GET("/bills/:id/returnable", handlers.GetBillReturnable)
 		auth.POST("/bills", handlers.CreateBill)
+
+		// Returns / Refunds
+		auth.GET("/returns", handlers.ListReturns)
+		auth.GET("/returns/:id", handlers.GetReturn)
+		auth.POST("/returns", handlers.CreateReturn)
 
 		// System Settings (Read-only for Seller, Admin can write)
 		auth.GET("/settings", handlers.GetSettings)
@@ -118,6 +141,7 @@ func main() {
 		admin.Use(middleware.RequireAdmin())
 		{
 			admin.PUT("/settings", handlers.UpdateSettings)
+			admin.POST("/settings/reset-mock-data", handlers.ResetMockData)
 			admin.GET("/users", handlers.ListUsers)
 			admin.POST("/users", handlers.CreateUser)
 			admin.PUT("/users/:id", handlers.UpdateUser)

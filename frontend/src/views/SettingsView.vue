@@ -107,6 +107,23 @@
           </div>
         </form>
       </div>
+
+      <!-- Demo Data Reset Card -->
+      <div class="m3-card settings-card mt-6 border-danger">
+        <div class="card-header flex-between">
+          <div>
+            <h3 class="card-title text-danger flex items-center gap-2">
+              <RotateCcw class="w-5 h-5" />
+              <span>Reset Database & Seed Mock Data</span>
+            </h3>
+            <p class="card-subtitle">Wipes all sales, returns, and inventory tables and seeds a fresh, comprehensive auto parts & vendor demo dataset.</p>
+          </div>
+          <button @click="resetMockDatabase" class="m3-btn m3-btn-danger" :disabled="resetting">
+            <RefreshCw class="w-4 h-4" :class="{ 'animate-spin': resetting }" />
+            <span>{{ resetting ? 'Resetting Data...' : 'Reset & Load Mock Data' }}</span>
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Tab 2: User & Seller Accounts -->
@@ -266,10 +283,13 @@ import {
   Plus,
   Edit3,
   Trash2,
+  RotateCcw,
+  RefreshCw,
 } from 'lucide-vue-next';
 
 const authStore = useAuthStore();
 const activeTab = ref('general');
+const resetting = ref(false);
 
 // Settings State
 const settingsForm = reactive({
@@ -306,6 +326,23 @@ const loadSettings = async () => {
     Object.assign(settingsForm, res.data);
   } catch (err) {
     console.error(err);
+  }
+};
+
+const resetMockDatabase = async () => {
+  if (!confirm('⚠️ WARNING: This will erase all current records and seed a fresh mock dataset with items, vendors, racks, invoices, and returns. Are you sure?')) {
+    return;
+  }
+  resetting.value = true;
+  try {
+    const res = await api.post('/settings/reset-mock-data');
+    alert(res.data?.message || 'Database reset successfully!');
+    await loadSettings();
+    await loadUsers();
+  } catch (err) {
+    alert(err.response?.data?.error || 'Failed to reset database');
+  } finally {
+    resetting.value = false;
   }
 };
 

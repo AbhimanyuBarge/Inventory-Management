@@ -15,7 +15,8 @@ import (
 )
 
 type CreateBillItemRequest struct {
-	SparePartID uint    `json:"spare_part_id" binding:"required"`
+	ItemID      uint    `json:"item_id"`
+	SparePartID uint    `json:"spare_part_id"`
 	Quantity    int     `json:"quantity" binding:"required,gt=0"`
 	UnitPrice   float64 `json:"unit_price" binding:"required,gte=0"`
 }
@@ -107,35 +108,44 @@ func CreateBill(c *gin.Context) {
 		var billItems []models.BillItem
 
 		for _, itemReq := range req.Items {
-			var part models.SparePart
-			if err := tx.Preload("Rack").First(&part, itemReq.SparePartID).Error; err != nil {
-				return fmt.Errorf("spare part ID %d not found", itemReq.SparePartID)
+			targetID := itemReq.ItemID
+			if targetID == 0 {
+				targetID = itemReq.SparePartID
+			}
+			if targetID == 0 {
+				return fmt.Errorf("item_id is required for all bill items")
 			}
 
-			if part.Quantity < itemReq.Quantity {
+			var item models.Item
+			if err := tx.Preload("Rack").First(&item, targetID).Error; err != nil {
+				return fmt.Errorf("item ID %d not found", targetID)
+			}
+
+			if item.Quantity < itemReq.Quantity {
 				return fmt.Errorf("insufficient stock for '%s' (SKU: %s). Available: %d, Requested: %d",
-					part.Name, part.SKU, part.Quantity, itemReq.Quantity)
+					item.Name, item.SKU, item.Quantity, itemReq.Quantity)
 			}
 
 			// Deduct stock
-			part.Quantity -= itemReq.Quantity
-			if err := tx.Save(&part).Error; err != nil {
-				return fmt.Errorf("failed to update stock for '%s': %w", part.Name, err)
+			item.Quantity -= itemReq.Quantity
+			if err := tx.Save(&item).Error; err != nil {
+				return fmt.Errorf("failed to update stock for '%s': %w", item.Name, err)
 			}
 
 			rackInfo := ""
-			if part.Rack != nil {
-				rackInfo = fmt.Sprintf("%s (%s)", part.Rack.Name, part.Rack.Number)
+			if item.Rack != nil {
+				rackInfo = fmt.Sprintf("%s (%s)", item.Rack.Name, item.Rack.Number)
 			}
 
 			itemTotal := math.Round((itemReq.UnitPrice*float64(itemReq.Quantity))*100) / 100
 			subtotal += itemTotal
 
-			partID := part.ID
+			itemID := item.ID
 			billItems = append(billItems, models.BillItem{
-				SparePartID: &partID,
-				PartName:    part.Name,
-				PartSKU:     part.SKU,
+				ItemID:      &itemID,
+				SparePartID: &itemID,
+				PartName:    item.Name,
+				PartSKU:     item.SKU,
 				RackInfo:    rackInfo,
 				UnitPrice:   itemReq.UnitPrice,
 				Quantity:    itemReq.Quantity,

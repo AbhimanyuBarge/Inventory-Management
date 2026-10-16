@@ -27,9 +27,22 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
-    path: '/parts',
-    name: 'Parts',
-    component: () => import('../views/PartsView.vue'),
+    path: '/returns',
+    name: 'ReturnsHistory',
+    component: () => import('../views/ReturnsHistoryView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/returns/new',
+    name: 'ProcessReturn',
+    component: () => import('../views/ProcessReturnView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/items',
+    name: 'Items',
+    component: () => import('../views/ItemsView.vue'),
+    alias: '/parts',
     meta: { requiresAuth: true },
   },
   {
@@ -42,6 +55,12 @@ const routes = [
     path: '/customers',
     name: 'Customers',
     component: () => import('../views/CustomersView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/vendors',
+    name: 'Vendors',
+    component: () => import('../views/VendorsView.vue'),
     meta: { requiresAuth: true },
   },
   {

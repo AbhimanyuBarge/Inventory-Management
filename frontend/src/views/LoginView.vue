@@ -5,8 +5,8 @@
         <div class="logo-circle">
           <Wrench class="w-8 h-8 text-white" />
         </div>
-        <h2 class="app-title">SparePro Inventory</h2>
-        <p class="app-desc">Spare Parts Management & Point of Sale</p>
+        <h2 class="app-title">ItemPro Inventory</h2>
+        <p class="app-desc">Item & Inventory Management • Point of Sale</p>
       </div>
 
       <div v-if="error" class="error-alert">

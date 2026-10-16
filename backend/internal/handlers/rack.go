@@ -29,10 +29,11 @@ func ListRacks(c *gin.Context) {
 		return
 	}
 
-	// Attach count of parts in each rack
+	// Attach count of items in each rack
 	for i := range racks {
 		var count int64
-		database.DB.Model(&models.SparePart{}).Where("rack_id = ?", racks[i].ID).Count(&count)
+		database.DB.Model(&models.Item{}).Where("rack_id = ?", racks[i].ID).Count(&count)
+		racks[i].ItemsCount = count
 		racks[i].PartsCount = count
 	}
 
@@ -42,11 +43,12 @@ func ListRacks(c *gin.Context) {
 func GetRack(c *gin.Context) {
 	id := c.Param("id")
 	var rack models.Rack
-	if err := database.DB.Preload("SpareParts").First(&rack, id).Error; err != nil {
+	if err := database.DB.Preload("Items").First(&rack, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Rack not found"})
 		return
 	}
-	rack.PartsCount = int64(len(rack.SpareParts))
+	rack.ItemsCount = int64(len(rack.Items))
+	rack.PartsCount = rack.ItemsCount
 	c.JSON(http.StatusOK, rack)
 }
 
@@ -117,8 +119,8 @@ func DeleteRack(c *gin.Context) {
 		return
 	}
 
-	// Unlink spare parts from this rack
-	database.DB.Model(&models.SparePart{}).Where("rack_id = ?", rack.ID).Update("rack_id", nil)
+	// Unlink items from this rack
+	database.DB.Model(&models.Item{}).Where("rack_id = ?", rack.ID).Update("rack_id", nil)
 
 	if err := database.DB.Delete(&rack).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete rack"})
@@ -136,10 +138,10 @@ func GetRackLabelPDF(c *gin.Context) {
 		return
 	}
 
-	var parts []models.SparePart
-	database.DB.Where("rack_id = ?", rack.ID).Order("sku asc").Find(&parts)
+	var items []models.Item
+	database.DB.Where("rack_id = ?", rack.ID).Order("sku asc").Find(&items)
 
-	pdfBytes, err := pdf.GenerateRackLabelPDF(&rack, parts)
+	pdfBytes, err := pdf.GenerateRackLabelPDF(&rack, items)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to generate label: %v", err)})
 		return

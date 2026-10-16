@@ -3,7 +3,7 @@
     <div class="header-row">
       <div>
         <h2 class="section-title">Storage Racks & Compartments</h2>
-        <p class="section-subtitle">Organize spare parts by rack location and print physical warehouse labels.</p>
+        <p class="section-subtitle">Organize inventory items by rack location and print physical warehouse labels.</p>
       </div>
 
       <button @click="openAddRackModal" class="m3-btn m3-btn-primary">
@@ -40,13 +40,13 @@
 
         <div class="rack-main-info">
           <h3 class="rack-title">{{ rack.name }}</h3>
-          <p class="rack-desc">{{ rack.description || 'General parts storage compartment' }}</p>
+          <p class="rack-desc">{{ rack.description || 'General item storage compartment' }}</p>
         </div>
 
         <div class="rack-footer">
-          <div class="parts-counter">
+          <div class="items-counter">
             <Package class="w-4 h-4 text-primary" />
-            <span><strong>{{ rack.parts_count || 0 }}</strong> Parts Stored</span>
+            <span><strong>{{ rack.items_count || rack.parts_count || 0 }}</strong> Items Stored</span>
           </div>
 
           <!-- Print Label PDF Action -->
@@ -193,7 +193,7 @@ const saveRack = async () => {
 };
 
 const deleteRack = async (rack) => {
-  if (!confirm(`Delete rack '${rack.name} - ${rack.number}'? (Assigned parts will be unlinked)`)) return;
+  if (!confirm(`Delete rack '${rack.name} - ${rack.number}'? (Assigned items will be unlinked)`)) return;
   try {
     await api.delete(`/racks/${rack.id}`);
     await loadRacks();

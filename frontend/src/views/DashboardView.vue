@@ -14,14 +14,14 @@
 
     <!-- KPI Metric Cards Grid -->
     <div class="kpi-grid">
-      <!-- Total Parts -->
+      <!-- Total Items -->
       <div class="kpi-card m3-card">
         <div class="kpi-icon-wrap icon-blue">
           <Package class="w-6 h-6" />
         </div>
         <div class="kpi-content">
-          <span class="kpi-label">Total Spare Parts</span>
-          <div class="kpi-value">{{ stats.total_parts_count || 0 }}</div>
+          <span class="kpi-label">Total Items</span>
+          <div class="kpi-value">{{ stats.total_items_count || stats.total_parts_count || 0 }}</div>
           <span class="kpi-sub">{{ stats.total_stock_quantity || 0 }} units total in stock</span>
         </div>
       </div>
@@ -65,7 +65,7 @@
         </div>
       </div>
 
-      <!-- Month's Sales -->
+      <!-- Month's Sales & Net Revenue -->
       <div class="kpi-card m3-card">
         <div class="kpi-icon-wrap icon-orange">
           <TrendingUp class="w-6 h-6" />
@@ -73,7 +73,19 @@
         <div class="kpi-content">
           <span class="kpi-label">This Month</span>
           <div class="kpi-value">₹{{ formatNumber(stats.month_sales) }}</div>
-          <span class="kpi-sub">Lifetime: ₹{{ formatNumber(stats.total_revenue) }}</span>
+          <span class="kpi-sub">Net Revenue: <strong>₹{{ formatNumber(stats.net_revenue) }}</strong></span>
+        </div>
+      </div>
+
+      <!-- Sales Returns & Refunds -->
+      <div class="kpi-card m3-card">
+        <div class="kpi-icon-wrap icon-crimson">
+          <RotateCcw class="w-6 h-6" />
+        </div>
+        <div class="kpi-content">
+          <span class="kpi-label">Returns & Refunds</span>
+          <div class="kpi-value text-danger">₹{{ formatNumber(stats.total_refund_amount) }}</div>
+          <span class="kpi-sub">{{ stats.total_returns_count || 0 }} return vouchers processed</span>
         </div>
       </div>
 
@@ -101,7 +113,7 @@
               {{ stats.low_stock_count }} items
             </span>
           </div>
-          <router-link to="/parts?low_stock=true" class="link-btn">View All</router-link>
+          <router-link to="/items?low_stock=true" class="link-btn">View All</router-link>
         </div>
 
         <div v-if="loading" class="loading-state">Loading dashboard data...</div>
@@ -115,29 +127,29 @@
           <table class="m3-table">
             <thead>
               <tr>
-                <th>Part Details</th>
+                <th>Item Details</th>
                 <th>Rack</th>
                 <th class="text-center">Stock</th>
                 <th class="text-right">Action</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="part in stats.low_stock_items" :key="part.id">
+              <tr v-for="item in stats.low_stock_items" :key="item.id">
                 <td>
-                  <div class="part-name">{{ part.name }}</div>
-                  <div class="part-sku">{{ part.sku }}</div>
+                  <div class="item-name">{{ item.name }}</div>
+                  <div class="item-sku">{{ item.sku }}</div>
                 </td>
                 <td>
-                  <span v-if="part.rack" class="rack-pill">
-                    {{ part.rack.name }} ({{ part.rack.number }})
+                  <span v-if="item.rack" class="rack-pill">
+                    {{ item.rack.name }} ({{ item.rack.number }})
                   </span>
                   <span v-else class="text-muted">-</span>
                 </td>
                 <td class="text-center">
-                  <span class="stock-badge-critical">{{ part.quantity }} left</span>
+                  <span class="stock-badge-critical">{{ item.quantity }} left</span>
                 </td>
                 <td class="text-right">
-                  <button @click="openQuickRestock(part)" class="m3-btn m3-btn-tonal m3-btn-sm">
+                  <button @click="openQuickRestock(item)" class="m3-btn m3-btn-tonal m3-btn-sm">
                     + Restock
                   </button>
                 </td>
@@ -151,41 +163,50 @@
       <div class="section-card m3-card">
         <div class="section-header">
           <h3 class="section-title">Recent Invoices</h3>
-          <router-link to="/bills" class="link-btn">All Invoices</router-link>
+          <router-link to="/bills" class="link-btn">View All</router-link>
         </div>
 
         <div v-if="loading" class="loading-state">Loading invoices...</div>
 
         <div v-else-if="!stats.recent_bills || stats.recent_bills.length === 0" class="empty-state">
-          <FileText class="w-10 h-10 text-muted" />
-          <p>No bills generated yet.</p>
+          <Receipt class="w-10 h-10 text-muted" />
+          <p>No invoices generated yet.</p>
         </div>
 
         <div v-else class="table-responsive">
           <table class="m3-table">
             <thead>
               <tr>
-                <th>Invoice</th>
+                <th>Invoice #</th>
                 <th>Customer</th>
-                <th class="text-right">Amount</th>
+                <th>Payment</th>
+                <th>Amount</th>
                 <th class="text-right">PDF</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="bill in stats.recent_bills" :key="bill.id">
                 <td>
-                  <div class="invoice-num">{{ bill.invoice_number }}</div>
+                  <div class="invoice-num font-mono">{{ bill.invoice_number || bill.bill_number }}</div>
                   <div class="bill-time">{{ formatDate(bill.created_at) }}</div>
                 </td>
                 <td>
-                  <div class="cust-name">{{ bill.customer?.name || 'Walk-in' }}</div>
-                  <div class="cust-seq">Customer Bill #{{ bill.customer_bill_sequence }}</div>
+                  <div class="cust-name font-bold">{{ bill.customer?.name || bill.customer_name || 'Walk-in Customer' }}</div>
+                  <div class="cust-seq text-xs text-muted">
+                    {{ bill.customer?.mobile ? bill.customer.mobile : 'Bill #' + (bill.customer_bill_sequence || bill.customer_sequence_number || 1) }}
+                  </div>
                 </td>
-                <td class="text-right font-bold">
-                  ₹{{ formatNumber(bill.total_amount) }}
+                <td>
+                  <span class="payment-badge">{{ (bill.payment_mode || 'cash').toUpperCase() }}</span>
+                  <div class="text-xs text-muted mt-0.5">{{ bill.items?.length || 1 }} item(s)</div>
+                </td>
+                <td>
+                  <div class="font-bold text-sm">₹{{ formatNumber(bill.total_amount || bill.final_total) }}</div>
+                  <div class="text-xs text-muted" v-if="bill.gst_applied">Incl. GST</div>
+                  <div class="text-xs text-muted" v-else>No GST</div>
                 </td>
                 <td class="text-right">
-                  <a :href="`/api/bills/${bill.id}/pdf`" target="_blank" class="m3-btn-icon" title="View PDF">
+                  <a :href="`/api/bills/${bill.id}/pdf`" target="_blank" class="m3-btn-icon" title="View & Download PDF Invoice">
                     <FileDown class="w-4 h-4 text-primary" />
                   </a>
                 </td>
@@ -199,8 +220,8 @@
     <!-- Quick Restock Modal -->
     <div v-if="restockModal.show" class="m3-modal-overlay" @click.self="restockModal.show = false">
       <div class="m3-modal-card p-6">
-        <h3 class="text-lg font-bold mb-2">Restock: {{ restockModal.part?.name }}</h3>
-        <p class="text-sm text-muted mb-4">Current Stock: <strong>{{ restockModal.part?.quantity }}</strong></p>
+        <h3 class="text-lg font-bold mb-2">Restock: {{ restockModal.item?.name }}</h3>
+        <p class="text-sm text-muted mb-4">Current Stock: <strong>{{ restockModal.item?.quantity }}</strong></p>
 
         <div class="m3-input-group">
           <label class="m3-label">Add Quantity</label>
@@ -239,6 +260,7 @@ import {
   CheckCircle2,
   FileText,
   FileDown,
+  RotateCcw,
 } from 'lucide-vue-next';
 
 const authStore = useAuthStore();
@@ -247,7 +269,7 @@ const loading = ref(true);
 
 const restockModal = reactive({
   show: false,
-  part: null,
+  item: null,
   amount: 10,
   loading: false,
 });
@@ -264,24 +286,24 @@ const loadStats = async () => {
   }
 };
 
-const openQuickRestock = (part) => {
-  restockModal.part = part;
+const openQuickRestock = (item) => {
+  restockModal.item = item;
   restockModal.amount = 10;
   restockModal.show = true;
 };
 
 const submitRestock = async () => {
-  if (!restockModal.part || restockModal.amount <= 0) return;
+  if (!restockModal.item || restockModal.amount <= 0) return;
   restockModal.loading = true;
   try {
-    await api.post(`/parts/${restockModal.part.id}/adjust`, {
+    await api.post(`/items/${restockModal.item.id}/adjust`, {
       type: 'add',
       amount: restockModal.amount,
     });
     restockModal.show = false;
     await loadStats();
   } catch (err) {
-    alert(err.response?.data?.error || 'Failed to restock part');
+    alert(err.response?.data?.error || 'Failed to restock item');
   } finally {
     restockModal.loading = false;
   }
@@ -372,6 +394,7 @@ onMounted(() => {
 .icon-green { background: #E6F4EA; color: #1E8E3E; }
 .icon-red { background: #FCE8E6; color: #D93025; }
 .icon-orange { background: #FEF7E0; color: #E37400; }
+.icon-crimson { background: #FDE8E8; color: #A02028; }
 .icon-teal { background: #E0F2F1; color: #00897B; }
 
 .kpi-content {
@@ -516,6 +539,21 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   gap: 8px;
+}
+
+.text-xs { font-size: 11px; }
+.font-mono { font-family: var(--font-mono, monospace); }
+.mt-0\.5 { margin-top: 2px; }
+
+.payment-badge {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #E2E8F0;
+  color: #334155;
+  display: inline-block;
 }
 
 .p-6 { padding: 24px; }

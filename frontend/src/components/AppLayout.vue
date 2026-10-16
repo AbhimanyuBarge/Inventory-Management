@@ -8,7 +8,7 @@
             <Wrench class="w-6 h-6 text-white" />
           </div>
           <div class="brand-text">
-            <span class="brand-title">SparePro</span>
+            <span class="brand-title">ItemPro</span>
             <span class="brand-subtitle">Inventory & POS</span>
           </div>
         </div>
@@ -31,9 +31,14 @@
           <span>Invoice History</span>
         </router-link>
 
-        <router-link to="/parts" class="nav-item" active-class="active">
+        <router-link to="/returns" class="nav-item" active-class="active">
+          <RotateCcw class="nav-icon" />
+          <span>Returns & Refunds</span>
+        </router-link>
+
+        <router-link to="/items" class="nav-item" active-class="active">
           <Package class="nav-icon" />
-          <span>Spare Parts</span>
+          <span>Inventory Items</span>
         </router-link>
 
         <router-link to="/racks" class="nav-item" active-class="active">
@@ -44,6 +49,11 @@
         <router-link to="/customers" class="nav-item" active-class="active">
           <Users class="nav-icon" />
           <span>Customers</span>
+        </router-link>
+
+        <router-link to="/vendors" class="nav-item" active-class="active">
+          <Truck class="nav-icon" />
+          <span>Vendors & Suppliers</span>
         </router-link>
 
         <router-link v-if="authStore.isAdmin" to="/settings" class="nav-item" active-class="active">
@@ -77,7 +87,7 @@
             <div class="brand-icon-sm">
               <Wrench class="w-4 h-4 text-white" />
             </div>
-            <span class="mobile-app-title">SparePro</span>
+            <span class="mobile-app-title">ItemPro</span>
           </div>
           <h1 class="page-title">{{ currentRouteTitle }}</h1>
         </div>
@@ -113,14 +123,14 @@
           <span>Bill POS</span>
         </router-link>
 
-        <router-link to="/parts" class="bottom-nav-item" active-class="active">
-          <Package class="bottom-icon" />
-          <span>Parts</span>
+        <router-link to="/returns" class="bottom-nav-item" active-class="active">
+          <RotateCcw class="bottom-icon" />
+          <span>Returns</span>
         </router-link>
 
-        <router-link to="/racks" class="bottom-nav-item" active-class="active">
-          <Grid3X3 class="bottom-icon" />
-          <span>Racks</span>
+        <router-link to="/items" class="bottom-nav-item" active-class="active">
+          <Package class="bottom-icon" />
+          <span>Items</span>
         </router-link>
 
         <router-link to="/bills" class="bottom-nav-item" active-class="active">
@@ -151,6 +161,8 @@ import {
   Sliders,
   LogOut,
   Wrench,
+  RotateCcw,
+  Truck,
 } from 'lucide-vue-next';
 
 const route = useRoute();
@@ -162,11 +174,15 @@ const currentRouteTitle = computed(() => {
     case 'Dashboard': return 'Store Dashboard';
     case 'Billing': return 'Point of Sale (POS)';
     case 'BillsHistory': return 'Invoice Records';
-    case 'Parts': return 'Spare Parts Catalog';
+    case 'ReturnsHistory': return 'Return & Refund History';
+    case 'ProcessReturn': return 'Process Sales Return';
+    case 'Items':
+    case 'Parts': return 'Inventory Items Catalog';
     case 'Racks': return 'Rack Storage Locations';
     case 'Customers': return 'Customer Directory';
+    case 'Vendors': return 'Vendors & Suppliers';
     case 'Settings': return 'System Settings & Users';
-    default: return 'Inventory Management';
+    default: return 'Inventory & Item Management';
   }
 });
 

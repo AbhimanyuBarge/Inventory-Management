@@ -10,36 +10,41 @@ import (
 )
 
 type DashboardStatsResponse struct {
-	TotalPartsCount     int64              `json:"total_parts_count"`
-	TotalStockQuantity  int64              `json:"total_stock_quantity"`
-	LowStockCount       int64              `json:"low_stock_count"`
-	TotalRacksCount     int64              `json:"total_racks_count"`
-	TotalCustomersCount int64              `json:"total_customers_count"`
-	TodaySales          float64            `json:"today_sales"`
-	TodayBillsCount     int64              `json:"today_bills_count"`
-	WeekSales           float64            `json:"week_sales"`
-	MonthSales          float64            `json:"month_sales"`
-	TotalRevenue        float64            `json:"total_revenue"`
-	LowStockItems       []models.SparePart `json:"low_stock_items"`
-	RecentBills         []models.Bill      `json:"recent_bills"`
+	TotalItemsCount     int64         `json:"total_items_count"`
+	TotalPartsCount     int64         `json:"total_parts_count"` // alias
+	TotalStockQuantity  int64         `json:"total_stock_quantity"`
+	LowStockCount       int64         `json:"low_stock_count"`
+	TotalRacksCount     int64         `json:"total_racks_count"`
+	TotalCustomersCount int64         `json:"total_customers_count"`
+	TodaySales          float64       `json:"today_sales"`
+	TodayBillsCount     int64         `json:"today_bills_count"`
+	WeekSales           float64       `json:"week_sales"`
+	MonthSales          float64       `json:"month_sales"`
+	TotalRevenue        float64       `json:"total_revenue"`
+	TotalReturnsCount   int64         `json:"total_returns_count"`
+	TotalRefundAmount   float64       `json:"total_refund_amount"`
+	NetRevenue          float64       `json:"net_revenue"`
+	LowStockItems       []models.Item `json:"low_stock_items"`
+	RecentBills         []models.Bill `json:"recent_bills"`
 }
 
 func GetDashboardStats(c *gin.Context) {
 	var stats DashboardStatsResponse
 
-	// Total unique spare parts
-	database.DB.Model(&models.SparePart{}).Count(&stats.TotalPartsCount)
+	// Total unique items
+	database.DB.Model(&models.Item{}).Count(&stats.TotalItemsCount)
+	stats.TotalPartsCount = stats.TotalItemsCount
 
-	// Total quantity of all parts
+	// Total quantity of all items
 	type SumResult struct {
 		TotalQty float64
 	}
 	var sumRes SumResult
-	database.DB.Model(&models.SparePart{}).Select("COALESCE(SUM(quantity), 0) as total_qty").Scan(&sumRes)
+	database.DB.Model(&models.Item{}).Select("COALESCE(SUM(quantity), 0) as total_qty").Scan(&sumRes)
 	stats.TotalStockQuantity = int64(sumRes.TotalQty)
 
 	// Low stock count & list
-	database.DB.Model(&models.SparePart{}).Where("quantity <= min_stock_alert").Count(&stats.LowStockCount)
+	database.DB.Model(&models.Item{}).Where("quantity <= min_stock_alert").Count(&stats.LowStockCount)
 	database.DB.Preload("Rack").Where("quantity <= min_stock_alert").Order("quantity asc").Limit(8).Find(&stats.LowStockItems)
 
 	// Total racks
@@ -76,8 +81,16 @@ func GetDashboardStats(c *gin.Context) {
 	database.DB.Model(&models.Bill{}).Select("COALESCE(SUM(total_amount), 0) as sum").Scan(&salesRes)
 	stats.TotalRevenue = salesRes.Sum
 
-	// Recent Bills
-	database.DB.Preload("Customer").Preload("User").Order("created_at desc").Limit(6).Find(&stats.RecentBills)
+	// Return Statistics
+	database.DB.Model(&models.ReturnBill{}).Count(&stats.TotalReturnsCount)
+	var refundRes SalesSum
+	database.DB.Model(&models.ReturnBill{}).Select("COALESCE(SUM(total_refund_amount), 0) as sum").Scan(&refundRes)
+	stats.TotalRefundAmount = refundRes.Sum
+
+	stats.NetRevenue = stats.TotalRevenue - stats.TotalRefundAmount
+
+	// Recent Bills with full associations
+	database.DB.Preload("Customer").Preload("User").Preload("Items").Order("created_at desc").Limit(6).Find(&stats.RecentBills)
 
 	c.JSON(http.StatusOK, stats)
 }

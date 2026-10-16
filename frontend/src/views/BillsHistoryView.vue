@@ -75,15 +75,25 @@
                 ₹{{ formatNumber(bill.total_amount) }}
               </td>
               <td class="text-center">
-                <a
-                  :href="`/api/bills/${bill.id}/pdf`"
-                  target="_blank"
-                  class="m3-btn m3-btn-tonal m3-btn-sm"
-                  title="Download & Print PDF"
-                >
-                  <FileDown class="w-3.5 h-3.5" />
-                  <span>PDF</span>
-                </a>
+                <div class="flex gap-2 justify-center">
+                  <a
+                    :href="`/api/bills/${bill.id}/pdf`"
+                    target="_blank"
+                    class="m3-btn m3-btn-tonal m3-btn-sm"
+                    title="Download & Print PDF"
+                  >
+                    <FileDown class="w-3.5 h-3.5" />
+                    <span>PDF</span>
+                  </a>
+                  <router-link
+                    :to="`/returns/new?bill_id=${bill.id}`"
+                    class="m3-btn m3-btn-danger m3-btn-sm"
+                    title="Process Return for this Invoice"
+                  >
+                    <RotateCcw class="w-3.5 h-3.5" />
+                    <span>Return</span>
+                  </router-link>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -102,6 +112,7 @@ import {
   FileText,
   FileDown,
   User,
+  RotateCcw,
 } from 'lucide-vue-next';
 
 const bills = ref([]);
